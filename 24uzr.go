@@ -9,6 +9,7 @@ import (
     // "gonum.org/v1/gonum/graph/path"
 
     "24uzr-route-server/transport"
+    "24uzr-route-server/services"
 
 )
 
@@ -18,7 +19,7 @@ func findShortestRoute(w http.ResponseWriter, r *http.Request) {
     route := transport.Route{ Start: query["start"][0], End: query["end"][0] }
     var graph transport.Graph
     json.NewDecoder(r.Body).Decode(&graph)
-    log.Println("params", graph)
+    route = services.FindShortestRoute(route, graph)
     json.NewEncoder(w).Encode(route);
 }
 

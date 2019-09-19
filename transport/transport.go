@@ -3,6 +3,7 @@ package transport
 type Route struct {
     Start string `json:start`
     End string `json:start`
+    Path []string `json:path`
 }
 
 type Edge struct {

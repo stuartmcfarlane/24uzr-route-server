@@ -1,7 +1,6 @@
 package services
 
 import (
-    "log"
     "github.com/twmb/algoimpl/go/graph"
     "24uzr-route-server/transport"
 )
@@ -37,7 +36,7 @@ func FindShortestRoute(routeIn transport.Route, graphIn transport.Graph ) transp
 
     // find the path ending at endNode
     var foundPath graph.Path
-    for key, path := range paths {
+    for _, path := range paths {
         if len(path.Path) == 0 {
             continue
         }

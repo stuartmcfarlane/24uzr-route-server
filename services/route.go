@@ -10,6 +10,7 @@ func FindShortestRoute(routeIn transport.Route, graphIn transport.Graph ) transp
 
     workingGraph := graph.New(graph.Undirected)
 
+    // Build the graph
     nodes := make(map[string]graph.Node, 0)
     for _, edge := range graphIn.Edges {
         startId := edge.Start
@@ -19,50 +20,42 @@ func FindShortestRoute(routeIn transport.Route, graphIn transport.Graph ) transp
             n := workingGraph.MakeNode()
             nodes[startId] = n
             *n.Value = startId
-            log.Println("added node", *n.Value)
         }
         _, prs = nodes[edge.End]
         if ! prs {
             n := workingGraph.MakeNode()
             nodes[endId] = n
             *n.Value = endId
-            log.Println("added node", *n.Value)
         }
         workingGraph.MakeEdgeWeight(nodes[startId], nodes[endId], int(edge.Weight * 1000))
     }
     startNode := nodes[routeIn.Start]
     endNode := nodes[routeIn.End]
 
-    log.Println("Start", startNode)
-    log.Println("End", endNode)
-
+    // get the sortest path to each node
     paths := workingGraph.DijkstraSearch(startNode)
 
+    // find the path ending at endNode
     var foundPath graph.Path
     for key, path := range paths {
-        log.Println("Path", key, path.Path)
         if len(path.Path) == 0 {
             continue
         }
         lastEdge := path.Path[len(path.Path) - 1]
-        log.Println("last edge", lastEdge)
         if  lastEdge.End == endNode {
             foundPath = path
             break
         }
     }
-    log.Println("found", foundPath)
-    log.Printf("start node %T", *startNode.Value)
-    var startId string
-    startId = (*startNode.Value).(string)
 
+    // build array of id's to return
     var pathOut []string
-    pathOut = append(pathOut, startId)
+    pathOut = append(pathOut, (*startNode.Value).(string))
     for _, edge := range foundPath.Path {
-        log.Println("next node", *edge.End.Value)
-        endId := (*edge.End.Value).(string)
-        pathOut = append(pathOut, endId)
+        pathOut = append(pathOut, (*edge.End.Value).(string))
     }
+
+    // build route for transport
     shortestRoute := transport.Route{
         Start:routeIn.Start,
         End: routeIn.End,

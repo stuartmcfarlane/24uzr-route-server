@@ -1,5 +1,11 @@
 package transport
 
+type Routes struct {
+    Start string `json:start`
+    End string `json:start`
+    Paths [][]string `json:paths`
+}
+
 type Route struct {
     Start string `json:start`
     End string `json:start`

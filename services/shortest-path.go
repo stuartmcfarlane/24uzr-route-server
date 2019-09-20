@@ -5,7 +5,7 @@ import (
     "24uzr-route-server/transport"
 )
 
-func FindShortestRoute(routeIn transport.Route, graphIn transport.Graph ) transport.Route {
+func FindShortestPath(routeIn transport.Route, graphIn transport.Graph ) transport.Route {
 
     workingGraph := graph.New(graph.Undirected)
 

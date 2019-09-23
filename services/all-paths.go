@@ -15,14 +15,12 @@ func FindAllPaths(route transport.Route, graph transport.Graph) transport.Routes
     log.Println(">FindAllPaths")
 
     m := makeAdjacencyMatrix(graph)
-    // log.Println("matrix", m)
 
     s := m.nodeIdx[route.Start];
     e := m.nodeIdx[route.End];
 
     p := []int{s}
     paths := findPaths(p, s, e, m)
-    // log.Println("paths", paths)
 
     pathsOut := make([][]string, len(paths))
     for i, path := range paths {
@@ -49,26 +47,16 @@ func putEdge(m adjacencyMatrix, s int, e int) adjacencyMatrix {
     m.matrix[e][s] = m.matrix[e][s] + 1;
     return m;
 }
-func printMatrix(m adjacencyMatrix) {
-    for i,r := range m.matrix {
-        log.Println(i, r)
-    }
-}
 func findPaths( path []int, start int, end int, matrix adjacencyMatrix) [][]int {
-    // log.Println(">findPaths", start, end, path)
-    // printMatrix(matrix)
     if start == end {
-        // log.Println("<findPaths found", path)
         return [][]int{path}
     }
 
     if len(path) > 12 {
-        // log.Println("<findPaths too long")
         return make([][]int, 0)
     }
 
     children := getChildren(start, &matrix)
-    // log.Println("children", children)
 
     paths := make([][]int, 0)
     for _, c := range children {
@@ -78,16 +66,10 @@ func findPaths( path []int, start int, end int, matrix adjacencyMatrix) [][]int 
         np = append(np, c)
         pp := findPaths(np, c, end, m)
         for _, p := range pp {
-            // log.Println("appending", p)
-            // log.Println("was", paths)
             paths = append(paths, p)
-            // log.Println("now", paths)
         }
         matrix = putEdge(m, start, c)
-
     }
-
-    // if len(paths) > 0 { log.Println("<findPaths found", len(paths), paths) }
     return paths
 }
 
@@ -132,12 +114,3 @@ func makeAdjacencyMatrix(g transport.Graph) adjacencyMatrix {
 
     return adjacencyMatrix{nodeNames: nn, nodeIdx: ni, matrix: m}
 }
-
-// func getEdges(am adjacencyMatrix) [][2]int {
-//     return start end pairs from am
-// }
-
-// func testAdjacencyMatrix(g transport.Graph) adjacencyMatrix {
-
-//     m1 := makeAdjacencyMatrix(graph)
-// }

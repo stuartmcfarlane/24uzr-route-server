@@ -63,11 +63,7 @@ func findPaths( path traveledPath, start int, end int, matrix adjacencyMatrix) [
     paths := make([]traveledPath, 0)
     for _, c := range children {
         m := removeEdge(matrix, start, c)
-        np := traveledPath{metres: path.metres, seconds: path.seconds, path:make([]int, len(path.path))}
-        copy(np.path, path.path)
-        np.path = append(np.path, c)
-        np.metres = np.metres + matrix.metres[start][c]
-        np.seconds = np.seconds + (matrix.metresPerSecond[start][c] / matrix.metres[start][c])
+        np := copyAndAppend(&m, path, start, c)
         pp := findPaths(np, c, end, m)
         for _, p := range pp {
             paths = append(paths, p)
@@ -77,6 +73,14 @@ func findPaths( path traveledPath, start int, end int, matrix adjacencyMatrix) [
     return paths
 }
 
+func copyAndAppend(matrix *adjacencyMatrix, path traveledPath, start int, c int) traveledPath {
+    np := traveledPath{metres: path.metres, seconds: path.seconds, path:make([]int, len(path.path))}
+    copy(np.path, path.path)
+    np.path = append(np.path, c)
+    np.metres = np.metres + matrix.metres[start][c]
+    np.seconds = np.seconds + (matrix.metres[start][c] / matrix.metresPerSecond[start][c])
+    return np;    
+}
 func getChildren(n int, m *adjacencyMatrix) []int {
     row := m.link[n]
     children := make([]int, 0)

@@ -10,11 +10,13 @@ type adjacencyMatrix struct {
     nodeNames map[int]string
     nodeIdx map[string]int
     link [][]int
-    weight [][]float32
+    metres [][]float32
+    metresPerSecond [][]float32
 }
 
-type weightedPath struct {
-    weight float32
+type traveledPath struct {
+    metres float32
+    seconds float32
     path []int
 }
 
@@ -26,11 +28,11 @@ func FindAllPaths(route transport.Route, graph transport.Graph) transport.Routes
     s := m.nodeIdx[route.Start];
     e := m.nodeIdx[route.End];
 
-    p := weightedPath{weight: 0, path: []int{s}}
+    p := traveledPath{metres: 0, seconds: 0, path: []int{s}}
     paths := findPaths(p, s, e, m)
 
     sort.Slice(paths, func(i, j int) bool {
-        return paths[i].weight > paths[j].weight
+        return paths[i].metres > paths[j].metres
     })
 
     page := paths[:10]
@@ -40,44 +42,32 @@ func FindAllPaths(route transport.Route, graph transport.Graph) transport.Routes
         for j, n := range path.path {
             p[j] = m.nodeNames[n]
         }
-        pathsOut[i] = transport.Path{Weight: path.weight, Nodes: p}
+        pathsOut[i] = transport.Path{Metres: path.metres, Seconds: path.seconds, Nodes: p}
     }
     routes := transport.Routes{Start: route.Start, End: route.End, Paths: pathsOut}
     log.Println("<FindAllPaths", len(routes.Paths))
     return routes
 }
 
-func removeEdge(m adjacencyMatrix, s int, e int) adjacencyMatrix {
-    if (m.link[s][e] > 0) {
-        m.link[s][e] = m.link[s][e] - 1;
-        m.link[e][s] = m.link[e][s] - 1;
-    }
-    return m;
-}
-func putEdge(m adjacencyMatrix, s int, e int) adjacencyMatrix {
-    m.link[s][e] = m.link[s][e] + 1;
-    m.link[e][s] = m.link[e][s] + 1;
-    return m;
-}
-
-func findPaths( path weightedPath, start int, end int, matrix adjacencyMatrix) []weightedPath {
+func findPaths( path traveledPath, start int, end int, matrix adjacencyMatrix) []traveledPath {
     if start == end {
-        return []weightedPath{path}
+        return []traveledPath{path}
     }
 
-    if len(path.path) > 14 {
-        return make([]weightedPath, 0)
+    if len(path.path) > 10 {
+        return make([]traveledPath, 0)
     }
 
-    children := getChildren(start, &matrix)
+    children := getChildrenByLength(start, &matrix)
 
-    paths := make([]weightedPath, 0)
+    paths := make([]traveledPath, 0)
     for _, c := range children {
         m := removeEdge(matrix, start, c)
-        np := weightedPath{weight: path.weight, path:make([]int, len(path.path))}
+        np := traveledPath{metres: path.metres, seconds: path.seconds, path:make([]int, len(path.path))}
         copy(np.path, path.path)
         np.path = append(np.path, c)
-        np.weight = np.weight + matrix.weight[start][c]
+        np.metres = np.metres + matrix.metres[start][c]
+        np.seconds = np.seconds + (matrix.metresPerSecond[start][c] / matrix.metres[start][c])
         pp := findPaths(np, c, end, m)
         for _, p := range pp {
             paths = append(paths, p)
@@ -98,10 +88,10 @@ func getChildren(n int, m *adjacencyMatrix) []int {
     return children
 }
 
-func getChildrenByWeight(n int, m *adjacencyMatrix) []int {
-    children := getChildrenByWeight(n, m)
+func getChildrenByLength(n int, m *adjacencyMatrix) []int {
+    children := getChildren(n, m)
     sort.Slice(children, func(i, j int) bool {
-        return m.weight[n][i] > m.weight[n][j]
+        return m.metres[n][i] * m.metresPerSecond[n][i] > m.metres[n][j] * m.metresPerSecond[n][j]
     })
     return children
 }
@@ -133,16 +123,34 @@ func makeAdjacencyMatrix(g transport.Graph) adjacencyMatrix {
         link[si][ei] = 1
         link[ei][si] = 1
     }
-    weight := make([][]float32, nc)
+    metres := make([][]float32, nc)
+    metresPerSecond := make([][]float32, nc)
     for i = 0; i < nc; i++ {
-        weight[i] = make([]float32, nc)
+        metres[i] = make([]float32, nc)
+        metresPerSecond[i] = make([]float32, nc)
     }
     for _, e := range g.Edges {
         si := ni[e.Start]
         ei := ni[e.End]
-        weight[si][ei] = e.WeightSE
-        weight[ei][si] = e.WeightES
+        metres[si][ei] = e.Metres
+        metres[ei][si] = e.Metres
+        metresPerSecond[si][ei] = e.MetresPerSecondSE
+        metresPerSecond[ei][si] = e.MetresPerSecondES
     }
 
-    return adjacencyMatrix{nodeNames: nn, nodeIdx: ni, link: link, weight: weight}
+    return adjacencyMatrix{nodeNames: nn, nodeIdx: ni, link: link, metres: metres, metresPerSecond: metresPerSecond}
 }
+
+func removeEdge(m adjacencyMatrix, s int, e int) adjacencyMatrix {
+    if (m.link[s][e] > 0) {
+        m.link[s][e] = m.link[s][e] - 1;
+        m.link[e][s] = m.link[e][s] - 1;
+    }
+    return m;
+}
+func putEdge(m adjacencyMatrix, s int, e int) adjacencyMatrix {
+    m.link[s][e] = m.link[s][e] + 1;
+    m.link[e][s] = m.link[e][s] + 1;
+    return m;
+}
+

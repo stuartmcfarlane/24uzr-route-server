@@ -26,7 +26,7 @@ func FindShortestPath(routeIn transport.Route, graphIn transport.Graph ) transpo
             nodes[endId] = n
             *n.Value = endId
         }
-        workingGraph.MakeEdgeWeight(nodes[startId], nodes[endId], int(edge.Weight * 1000))
+        workingGraph.MakeEdgeWeight(nodes[startId], nodes[endId], int(edge.Metres * 1000))
     }
     startNode := nodes[routeIn.Start]
     endNode := nodes[routeIn.End]
@@ -58,7 +58,7 @@ func FindShortestPath(routeIn transport.Route, graphIn transport.Graph ) transpo
     shortestRoute := transport.Route{
         Start:routeIn.Start,
         End: routeIn.End,
-        Path: transport.Path{Weight: float32(len(pathOut)), Nodes:pathOut},
+        Path: transport.Path{Metres: float32(len(pathOut)), Nodes:pathOut},
     }
     return shortestRoute
 }

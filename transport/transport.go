@@ -1,8 +1,9 @@
 package transport
 
 type Path struct {
-    Weight float32
-    Nodes []string `json:path`
+    Metres float32 `json:metres`
+    Seconds float32 `json:seconds`
+    Nodes []string `json:nodes`
 }
 type Route struct {
     Start string `json:start`
@@ -19,9 +20,9 @@ type Routes struct {
 type Edge struct {
     Start string `json:start`
     End string `json:end`
-    Weight float32 `json:weight`
-    WeightSE float32 `json:weightSE`
-    WeightES float32 `json:weightES`
+    Metres float32 `json:metres`
+    MetresPerSecondSE float32 `json:metresPerSecondSE`
+    MetresPerSecondES float32 `json:metresPerSecondES`
 }
 type Graph struct {
     Edges []Edge `json:edges`

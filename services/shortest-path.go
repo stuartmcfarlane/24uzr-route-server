@@ -58,7 +58,7 @@ func FindShortestPath(routeIn transport.Route, graphIn transport.Graph ) transpo
     shortestRoute := transport.Route{
         Start:routeIn.Start,
         End: routeIn.End,
-        Path: pathOut,
+        Path: transport.Path{Weight: float32(len(pathOut)), Nodes:pathOut},
     }
     return shortestRoute
 }

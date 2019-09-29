@@ -6,12 +6,16 @@ import (
     "24uzr-route-server/transport"
 )
 
+const RACE_TIME_HOURS = 8.0
+const RACE_TIME_SECONDS = RACE_TIME_HOURS * 60 * 60
+
 type adjacencyMatrix struct {
     nodeNames map[int]string
     nodeIdx map[string]int
     link [][]int
     metres [][]float32
     metresPerSecond [][]float32
+    childCache [][]int
 }
 
 type traveledPath struct {
@@ -21,7 +25,7 @@ type traveledPath struct {
 }
 
 func FindAllPaths(route transport.Route, graph transport.Graph) transport.Routes {
-    log.Println(">FindAllPaths")
+    log.Println(">FindAllPaths", RACE_TIME_HOURS, "hours")
 
     m := makeAdjacencyMatrix(graph)
 
@@ -29,7 +33,7 @@ func FindAllPaths(route transport.Route, graph transport.Graph) transport.Routes
     e := m.nodeIdx[route.End];
 
     p := traveledPath{metres: 0, seconds: 0, path: []int{s}}
-    paths := findPaths(p, s, e, m)
+    paths := findPaths(RACE_TIME_SECONDS, &p, s, e, &m)
 
     sort.Slice(paths, func(i, j int) bool {
         return paths[i].metres > paths[j].metres
@@ -49,22 +53,22 @@ func FindAllPaths(route transport.Route, graph transport.Graph) transport.Routes
     return routes
 }
 
-func findPaths( path traveledPath, start int, end int, matrix adjacencyMatrix) []traveledPath {
+func findPaths( timeLeft float32, path *traveledPath, start int, end int, matrix *adjacencyMatrix) []traveledPath {    
     if start == end {
-        return []traveledPath{path}
+        return []traveledPath{*path}
     }
 
-    if len(path.path) > 10 {
+    if timeLeft < 0 {
         return make([]traveledPath, 0)
     }
 
-    children := getChildrenByLength(start, &matrix)
+    children := getChildrenByLength(start, matrix)
 
     paths := make([]traveledPath, 0)
     for _, c := range children {
         m := removeEdge(matrix, start, c)
-        np := copyAndAppend(&m, path, start, c)
-        pp := findPaths(np, c, end, m)
+        np := copyAndAppend(m, path, start, c)
+        pp := findPaths(timeLeft - edgeTime(m, start, c), np, c, end, m)
         for _, p := range pp {
             paths = append(paths, p)
         }
@@ -73,15 +77,18 @@ func findPaths( path traveledPath, start int, end int, matrix adjacencyMatrix) [
     return paths
 }
 
-func copyAndAppend(matrix *adjacencyMatrix, path traveledPath, start int, c int) traveledPath {
+func copyAndAppend(matrix *adjacencyMatrix, path *traveledPath, start int, c int) *traveledPath {
     np := traveledPath{metres: path.metres, seconds: path.seconds, path:make([]int, len(path.path))}
     copy(np.path, path.path)
     np.path = append(np.path, c)
     np.metres = np.metres + matrix.metres[start][c]
     np.seconds = np.seconds + (matrix.metres[start][c] / matrix.metresPerSecond[start][c])
-    return np;    
+    return &np;
 }
 func getChildren(n int, m *adjacencyMatrix) []int {
+    if m.childCache[n] != nil {
+        return m.childCache[n]
+    }
     row := m.link[n]
     children := make([]int, 0)
     for c, edge := range row {
@@ -89,6 +96,8 @@ func getChildren(n int, m *adjacencyMatrix) []int {
             children = append(children, c)
         }
     }
+    m.childCache[n] = children
+
     return children
 }
 
@@ -141,18 +150,23 @@ func makeAdjacencyMatrix(g transport.Graph) adjacencyMatrix {
         metresPerSecond[si][ei] = e.MetresPerSecondSE
         metresPerSecond[ei][si] = e.MetresPerSecondES
     }
+    childCache := make([][]int, nc)
 
-    return adjacencyMatrix{nodeNames: nn, nodeIdx: ni, link: link, metres: metres, metresPerSecond: metresPerSecond}
+    return adjacencyMatrix{nodeNames: nn, nodeIdx: ni, link: link, metres: metres, metresPerSecond: metresPerSecond, childCache: childCache}
 }
 
-func removeEdge(m adjacencyMatrix, s int, e int) adjacencyMatrix {
+func edgeTime(m *adjacencyMatrix, si int, ei int) float32 {
+    return m.metres[si][ei] / m.metresPerSecond[si][ei]
+}
+
+func removeEdge(m *adjacencyMatrix, s int, e int) *adjacencyMatrix {
     if (m.link[s][e] > 0) {
         m.link[s][e] = m.link[s][e] - 1;
         m.link[e][s] = m.link[e][s] - 1;
     }
     return m;
 }
-func putEdge(m adjacencyMatrix, s int, e int) adjacencyMatrix {
+func putEdge(m *adjacencyMatrix, s int, e int) *adjacencyMatrix {
     m.link[s][e] = m.link[s][e] + 1;
     m.link[e][s] = m.link[e][s] + 1;
     return m;

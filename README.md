@@ -1,12 +1,12 @@
-#24uzr route server
+# 24uzr route server
 
-##Rules
+## Rules
 
  - Each leg may be travelled at most twice.
  - The time to traverse the path must be no less that 23 hours and no more than 25 hours
  - The most desirable path is the longest in distance
 
-##Proposed algorithm
+## Proposed algorithm
 
 Exhaustive search
 
@@ -14,7 +14,7 @@ Exhaustive search
     1. 
 
 
-##Rejected algorithms
+## Rejected algorithms
 
  1. Generate a graph with 2 edges per leg
  1. Take all spanning trees of the graph
@@ -24,8 +24,10 @@ Exhaustive search
 
 Spanning trees are not what we are looking for. We need paths.
 
+## Combinatorial Optimization
 
-##References
+## References
 
  1. [yourbasic/graph](https://godoc.org/github.com/yourbasic/graph)
  2. [Graph spanning algorithms](https://link.springer.com/article/10.1007/s40747-018-0079-7)
+ 3. [Combinatorial Optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization)

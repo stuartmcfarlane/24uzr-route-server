@@ -35,7 +35,10 @@ Exhaustive search
 
 Spanning trees are not what we are looking for. We need paths.
 
+## Combinatorial Optimization
+
 ## References
 
 1.  [yourbasic/graph](https://godoc.org/github.com/yourbasic/graph)
 2.  [Graph spanning algorithms](https://link.springer.com/article/10.1007/s40747-018-0079-7)
+3.  [Combinatorial Optimization](https://en.wikipedia.org/wiki/Combinatorial_optimization)
